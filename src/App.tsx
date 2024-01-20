@@ -3,6 +3,12 @@ import { useAccount } from "wagmi";
 import LandingHero from "./components/LandingHero";
 import Navbar from "./components/Navbar";
 import TransactionCard from "./components/TransactionCard";
+// @ts-ignore
+import faceIO from "@faceio/fiojs";
+
+
+const faceio = new faceIO("fioa0b08");
+
 
 function App() {
   const { address, isConnecting } = useAccount();
@@ -18,7 +24,7 @@ function App() {
             <span className="text-[#cbb7f4]">$GHO</span>
           </div>
 
-          <TransactionCard />
+          <TransactionCard faceio={faceio}/>
         </div>
       )}
 

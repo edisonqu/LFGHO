@@ -1,20 +1,19 @@
 import { useAccount } from "wagmi";
 
-// import handleError from "../helpers/errorHandling";
 
-// @ts-ignore
-import faceIO from "@faceio/fiojs";
+
 import { useEffect, useState } from "react";
 import getBalance from "../helpers/Explorer";
 import Web3 from "web3";
 import sendERC20 from "../helpers/Transaction";
+import handleError from "../helpers/errorHandling";
 
-const TransactionCard = () => {
+
+const TransactionCard = ({faceio}:any) => {
   const { address } = useAccount();
   const [receipient, setRecipient] = useState<string | undefined>(undefined);
   const [faceWallet, setFaceWallet] = useState<string | undefined>(undefined);
   const [faceInfo, setFaceInfo] = useState<string | undefined>(undefined);
-  const faceio = new faceIO("fioa0b08");
 
   const [balance, setBalance] = useState(0);
 
@@ -30,6 +29,7 @@ const TransactionCard = () => {
 
     fetchBalance();
   }, [address]);
+
 
   const [ghoAmount, setGHOAmount] = useState<number>(0);
   const [txLoading, setTxLoading] = useState<boolean>(false);
@@ -55,14 +55,17 @@ const TransactionCard = () => {
       setFaceInfo(response.details as string);
       setFaceAge(response.details.age);
       setFaceGender(response.details.gender);
-      setFaceWallet(receipient);
 
       (document.getElementById("my_modal_4") as HTMLDialogElement).showModal();
+      
     } catch (error) {
       // Set error state if enrollment fails
-      //   handleError(error);
+      handleError(error)
       console.log("failed !!");
-      faceio.restartSession();
+      console.error(error)
+     faceio.restartSession();  
+      
+
     }
   };
 
@@ -70,6 +73,8 @@ const TransactionCard = () => {
     try {
       console.log("starting to authenticate user");
 
+      const success = faceio.restartSession();  
+      console.log(success);
       const userData = await faceio.authenticate({ locale: "auto" });
       console.log("Success, user recognized");
       console.log(userData);
@@ -77,12 +82,15 @@ const TransactionCard = () => {
       console.log("Linked facial Id: " + userData.facialId);
       console.log("Associated Payload: " + JSON.stringify(userData.payload));
 
-      setFaceInfo(userData.details);
+
       setFaceWallet(userData.payload.walletAddress);
     } catch (errCode) {
-      //   console.log(handleError(errCode));
+        console.error(errCode)
+      handleError(errCode)
 
-      faceio.restartSession();
+        
+
+      faceio.restartSession();  
     }
   };
 
@@ -128,7 +136,14 @@ const TransactionCard = () => {
           Recipient:{" "}
         </div>
 
-        {!faceWallet && (
+        {faceWallet &&            <input
+              type="text"
+              placeholder={faceWallet}
+              className="input input-bordered w-full max-w-md"
+              disabled
+            />}
+
+        {!faceWallet && !faceInfo && (
           <div className="flex flex-row gap-8">
             <button
               className="btn btn-active btn-neutral"
@@ -154,15 +169,16 @@ const TransactionCard = () => {
         )}
 
         {/* TODO: please someone fix this part */}
-        {faceWallet && (
+        {faceInfo && (
           <div className="flex flex-row justify-center">
             {" "}
-            <input
-              type="text"
-              placeholder={faceWallet}
-              className="input input-bordered w-full max-w-md"
-              disabled
-            />
+
+{!faceWallet &&                       <button
+              className="btn btn-active btn-neutral"
+              onClick={authenticateUser}
+            >
+              Scan face
+            </button>}
           </div>
         )}
 
@@ -205,7 +221,10 @@ const TransactionCard = () => {
             )}
             <div className="modal-action">
               <form method="dialog">
-                <button className="btn">Close</button>
+                <button className="btn" onClick={()=>{
+                    // eslint-disable-next-line no-restricted-globals
+                    location.reload()
+                }}>Close</button>
               </form>
             </div>
           </div>
@@ -226,7 +245,7 @@ const TransactionCard = () => {
 
       <button
         className="btn btn-wide bg-[#cbb7f4] mt-12 mb-28"
-        disabled={!ghoAmount || !receipient || ghoAmount > balance || txLoading}
+        disabled={!ghoAmount || !faceWallet || ghoAmount > balance || txLoading}
         onClick={handleSend}
       >
         {(ghoAmount as number) > balance
