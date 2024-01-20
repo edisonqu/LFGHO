@@ -13,9 +13,7 @@ export default function LandingHero() {
             using your face!
           </h1>
           <p className="py-6">
-            Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda
-            excepturi exercitationem quasi. In deleniti eaque aut repudiandae et
-            a id nisi.
+          This project is a web dapp designed to link users' faces to their GHO cryptocurrency wallet addresses. It enables users to send GHO tokens to others, provided they have a picture of the recipient and that person has linked their face to their wallet address in the system. The core functionality involves facial recognition for secure and user-friendly GHO token transactions on the web.
           </p>
           <div className="flex justify-center">
             {!address && <ConnectKitButton />}
