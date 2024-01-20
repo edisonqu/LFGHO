@@ -4,20 +4,39 @@ import { useAccount } from "wagmi";
 
 // @ts-ignore
 import faceIO from "@faceio/fiojs";
-import { useState } from "react";
-
-const faceio = new faceIO("fioa0b08");
+import { useEffect, useState } from "react";
+import getBalance from "./Explorer";
+import Web3 from "web3";
+import sendERC20 from "./Transaction";
 
 const TransactionCard = () => {
   const { address } = useAccount();
   const [receipient, setRecipient] = useState<string | undefined>(undefined);
   const [faceWallet, setFaceWallet] = useState<string | undefined>(undefined);
   const [faceInfo, setFaceInfo] = useState<string | undefined>(undefined);
+  const faceio = new faceIO("fioa0b08");
+
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const balance = await getBalance(address);
+        setBalance(balance);
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+      }
+    };
+
+    fetchBalance();
+  }, [address]);
+
+  const [ghoAmount, setGHOAmount] = useState<number>(0);
+  const [txLoading, setTxLoading] = useState<boolean>(false);
 
   // getting lazy now, bad coding practice for these two states
   const [faceAge, setFaceAge] = useState<string | undefined>(undefined);
   const [faceGender, setFaceGender] = useState<string | undefined>(undefined);
-
 
   const enrollNewUser = async () => {
     try {
@@ -57,6 +76,9 @@ const TransactionCard = () => {
 
       console.log("Linked facial Id: " + userData.facialId);
       console.log("Associated Payload: " + JSON.stringify(userData.payload));
+
+      setFaceInfo(userData.details);
+      setFaceWallet(userData.payload.walletAddress);
     } catch (errCode) {
       //   console.log(handleError(errCode));
 
@@ -64,9 +86,32 @@ const TransactionCard = () => {
     }
   };
 
+  const [alertMessage, setAlertMessage] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+
+  const handleSend = async () => {
+    setTxLoading(true);
+    const result = await sendERC20(
+      new Web3(window.ethereum),
+      address,
+      faceWallet,
+      ghoAmount
+    );
+
+    if (result === "failed") {
+      setAlertMessage("Error! Transaction failed.");
+      setShowAlert(true);
+    } else {
+      setAlertMessage(`Transaction successful! Hash: ${result}`);
+      setShowAlert(true);
+    }
+
+    setTxLoading(false);
+  };
+
   return (
-    <div className="flex flex-col justify-center items-center outline m-auto rounded-3xl gap-4">
-      <div className="flex flex-row w-full justify-center mt-5">
+    <div className="flex flex-col justify-center items-center outline m-auto rounded-3xl gap-4 font-bold w-[800px]">
+      <div className="flex flex-row w-full justify-center mt-24">
         <div className="flex justify-center items-center text-2xl mr-4">
           Sender:{" "}
         </div>
@@ -86,7 +131,7 @@ const TransactionCard = () => {
         {!faceWallet && (
           <div className="flex flex-row gap-8">
             <button
-              className="btn btn-active btn-ghost"
+              className="btn btn-active btn-neutral"
               onClick={() =>
                 (
                   document.getElementById("my_modal_4") as HTMLDialogElement
@@ -95,12 +140,22 @@ const TransactionCard = () => {
             >
               Register face
             </button>
+            <div className="text-center flex justify-center items-center">
+              OR
+            </div>
 
-            <button className="btn btn-active btn-ghost">Scan face</button>
+            <button
+              className="btn btn-active btn-neutral"
+              onClick={authenticateUser}
+            >
+              Scan face
+            </button>
           </div>
         )}
+
+        {/* TODO: please someone fix this part */}
         {faceWallet && (
-          <div className="w-full flex flex-row justify-center">
+          <div className="flex flex-row justify-center">
             {" "}
             <input
               type="text"
@@ -142,13 +197,12 @@ const TransactionCard = () => {
               >
                 {faceInfo ? "Already registered" : `Register your face`}
               </button>
- 
             </div>
             {faceAge && faceGender && (
-                <div>
-                  {`Faceio has identified you as a ${faceAge} ${faceGender}.`}
-                </div>
-              )}
+              <div>
+                {`Faceio has identified you as a ${faceAge} ${faceGender}.`}
+              </div>
+            )}
             <div className="modal-action">
               <form method="dialog">
                 <button className="btn">Close</button>
@@ -156,15 +210,34 @@ const TransactionCard = () => {
             </div>
           </div>
         </dialog>
-        {/* <input
-          type="text"
-          placeholder={address}
-          className="input input-bordered w-full max-w-md"
-          disabled
-        /> */}
       </div>
 
-      <div className="h-80">hello</div>
+      <div className="text-2xl text-center mt-5">
+        Amount of <span className="text-[#cbb7f4]">$GHO</span>
+        <input
+          type="text"
+          className="input input-bordered w-full max-w-md mt-4"
+          placeholder={`You can send a max of ${balance} $GHO`}
+          onChange={(e) => {
+            setGHOAmount(Number(e.target.value));
+          }}
+        />
+      </div>
+
+      <button
+        className="btn btn-wide bg-[#cbb7f4] mt-12 mb-28"
+        disabled={!ghoAmount || !receipient || ghoAmount > balance || txLoading}
+        onClick={handleSend}
+      >
+        {(ghoAmount as number) > balance
+          ? "Not enough $GHO"
+          : `Send ${ghoAmount} $GHO`}
+      </button>
+      {showAlert && (
+        <div role="alert" className={``}>
+          <span>{alertMessage}</span>
+        </div>
+      )}
     </div>
   );
 };
