@@ -5,9 +5,9 @@ import { useAccount } from "wagmi";
 // @ts-ignore
 import faceIO from "@faceio/fiojs";
 import { useEffect, useState } from "react";
-import getBalance from "./Explorer";
+import getBalance from "../helpers/Explorer";
 import Web3 from "web3";
-import sendERC20 from "./Transaction";
+import sendERC20 from "../helpers/Transaction";
 
 const TransactionCard = () => {
   const { address } = useAccount();
