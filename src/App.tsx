@@ -8,11 +8,11 @@ function App() {
   const { address, isConnecting } = useAccount();
 
   return (
-    <div className="min-h-screen max-w-full">
+    <div className="max-h-screen max-w-full">
       <Navbar />
 
       {address && !isConnecting && (
-        <div className="mt-20">
+        <div className="mt-8">
           <div className="text-4xl text-center mb-8 font-bold">
             Scan the receipient's face to send them{" "}
             <span className="text-[#cbb7f4]">$GHO</span>
