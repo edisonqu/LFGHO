@@ -1,9 +1,9 @@
-# LFGHO
+# Never enter a wallet address again!
 
 ## Welcome to Face2GHO
-### Dapp that allows anyone to send GHO to anybody with a pic of their face!
+### DApp that allows you to send GHO to anybody with a pic of their face!
 
-This project is a web dapp designed to link users' faces to their GHO cryptocurrency wallet addresses. It enables users to send GHO tokens to others, provided they have a picture of the recipient and that person has linked their face to their wallet address in the system. The core functionality involves facial recognition for secure and user-friendly GHO token transactions on the web.
+Face2GHO is a web dapp designed to link users' faces to their GHO cryptocurrency wallet addresses. It enables users to send GHO tokens to others, provided they have a picture of the recipient and that person has linked their face to their wallet address in the system. The core functionality involves facial recognition for secure and user-friendly GHO token transactions on the web.
 
 ## Techs Used
 
