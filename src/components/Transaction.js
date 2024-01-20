@@ -1,71 +1,37 @@
-import {React, useRef, useState} from 'react';
-import ERC20_ABI from "../abis/erc20_abi.json";
 import Web3 from 'web3';
+import ERC20_ABI from "../abis/erc20_abi.json";
 
-const Transaction = (props) => {
-    const web3 = new Web3(window.ethereum);
-    const CONTRACT_ADDRESS = "0xc4bF5CbDaBE595361438F8c6a187bDc330539c60";
-    const numTokensRef = useRef(null);
-    const subjectAddressRef = useRef(null);
+const sendERC20 = async (web3, account, toAddress, tokenAmount) => {
+    const contractAddress = "0xc4bF5CbDaBE595361438F8c6a187bDc330539c60" // sepholia contract address for $GHO
+    if (!tokenAmount || tokenAmount <= 0) {
+        console.log("Invalid token amount", tokenAmount);
+        return "failed";
+    }
 
+    const myContract = new web3.eth.Contract(ERC20_ABI, contractAddress);
+    const amountToSend = web3.utils.toWei(tokenAmount.toString(), 'ether');
 
-    const sendERC20 = async (toAddress) => {
-        const myContract = new web3.eth.Contract(ERC20_ABI, CONTRACT_ADDRESS);
-        const tokenAmount = parseFloat(numTokensRef.current.value);
+    try {
+        const transaction = myContract.methods.transfer(toAddress, amountToSend);
 
-        if (!tokenAmount || tokenAmount <= 0) {
-            console.log("bno good", tokenAmount)
-            return;
+        // Estimate gas and set gas limit algorithmically on behalf of the user
+        const estimatedGas = await transaction.estimateGas({ from: account });
+        const gasBuffer = estimatedGas / 5n; // Calculate the buffer as a BigInt
+        const gasLimit = estimatedGas + gasBuffer; // Adding 20% buffer
 
-        }
-      
-        const amountToSend = web3.utils.toWei(tokenAmount.toString(), 'ether');
+        // Send the transaction
+        const receipt = await transaction.send({
+            from: account,
+            gas: gasLimit.toString(), // Convert the BigInt gas limit to a string
+        });
 
-        try {
-            const transaction = myContract.methods.transfer(toAddress, amountToSend);
-
-            // Estimate gas and set gas limit algorithmically on behalf of the user
-            const estimatedGas = await transaction.estimateGas({ from: props.account });
-            const gasLimit = estimatedGas + (estimatedGas / 5n); // Adding 20% buffer
-
-            // Go ahead and send the transaction
-            const receipt = await transaction.send({
-                from: props.account,
-                gas: gasLimit,
-            });
-
-            console.log(receipt);
-            return receipt;
-        } catch (err) {
-            console.error(err);
-            return err;
-        }
-    };
-
-    return (
-        <div>Transaction <br />
-            <label>Enter how much you want to send!</label>
-            <input ref={numTokensRef} type="number"></input>
-            <label>Can't find someone? Enter their address</label>
-            <input ref={subjectAddressRef} type="string"></input>
-            <button onClick={(e) => { 
-                console.log(subjectAddressRef.current.value)
-                if(!subjectAddressRef.current || !subjectAddressRef.current.value || subjectAddressRef.current.value.trim() == "") {
-                    console.log("no")
-                sendERC20(props.subjectAddress)
-                } else {
-                    console.log("yes")
-
-                sendERC20(subjectAddressRef.current.value)
-                }
-                }}>Send</button>
-            
-            
-
-        </div>
-    )
-}
+        console.log(receipt);
+        return receipt.transactionHash; // Returning the transaction hash
+    } catch (err) {
+        console.error(err);
+        return "failed";
+    }
+};
 
 
-
-export default Transaction;
+export default sendERC20;
