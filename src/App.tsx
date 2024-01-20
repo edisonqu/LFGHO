@@ -64,7 +64,7 @@ function App() {
       {address && !isConnecting && (
         <div className="mt-20">
           
-          <div className="text-4xl text-center mb-8">
+          <div className="text-4xl text-center mb-8 font-bold">
             Scan the receipient's face to send them <span className="text-[#cbb7f4]">$GHO</span>
           </div>
 
